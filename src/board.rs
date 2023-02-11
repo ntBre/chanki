@@ -96,19 +96,19 @@ pub struct Board {
 }
 
 macro_rules! black {
-	($($piece:expr$(,)*)*) => {
-	    [
-		$(Some(Piece { typ: $piece, color: Color::Black }),)*
-	    ]
-	}
+    ($($piece:expr$(,)*)*) => {
+	[
+	    $(Some(Piece { typ: $piece, color: Color::Black }),)*
+	]
+    }
 }
 
 macro_rules! white {
-	($($piece:expr$(,)*)*) => {
-	    [
-		$(Some(Piece { typ: $piece, color: Color::White }),)*
-	    ]
-	}
+    ($($piece:expr$(,)*)*) => {
+	[
+	    $(Some(Piece { typ: $piece, color: Color::White }),)*
+	]
+    }
 }
 
 pub type Coord = (char, usize);
@@ -139,16 +139,16 @@ impl Board {
             let mut mov = mov.chars().peekable();
             let typ = PieceType::from(mov.next().unwrap());
             if let Some(c) = mov.peek() && *c == 'x' {
-		    // discard capture indicator
-		    mov.next();
-		}
+		// discard capture indicator
+		mov.next();
+	    }
             let mut file = mov.next().unwrap();
             // discriminant for moves like Rae8 vs Rfe8
             let mut disc = None;
             if let Some(c) = mov.peek() && c.is_alphabetic() {
-		    disc = Some(file);
-		    file = mov.next().unwrap();
-		}
+		disc = Some(file);
+		file = mov.next().unwrap();
+	    }
             let rank = mov.next().unwrap().to_digit(10).unwrap() as usize - 1;
             for r in 0..8 {
                 if let Some(d) = disc {
@@ -176,7 +176,7 @@ impl Board {
                             if DEBUG {
                                 println!(
                                     "moving {color} {typ} \
-					 from {f}{r} to {file}{rank}"
+				     from {f}{r} to {file}{rank}"
                                 );
                             }
                             return (from, to);
@@ -227,81 +227,96 @@ impl Board {
                 }
             }
         } else {
-            // pawn move
-            let mut mov = mov.chars().peekable();
-            let file = mov.next().unwrap();
-            if let Some(c) = mov.peek() && *c == 'x' {
-		    // pawn capture
-		    mov.next();
-		    let new_file = mov.next().unwrap();
-		    let rank = mov.next().unwrap().to_digit(10).unwrap() as usize - 1;
-		    match color {
-			Color::White => {
-			    let from = (file, rank - 1);
-			    let to = (new_file, rank);
-			    self[to] = std::mem::take(&mut self[from]);
-			    if DEBUG {
-				println!("pawn {file}{} takes {new_file}{}", rank - 1, rank);
-			    }
-			    return (from, to);
-			}
-			Color::Black => {
-			    let from = (file, rank + 1);
-			    let to = (new_file, rank);
-			    self[to] = std::mem::take(&mut self[from]);
-			    if DEBUG {
-				println!("pawn {file}{} takes {new_file}{}", rank + 1, rank);
-			    }
-			    return (from, to);
-			}
-		    }
-		} else {
-		    let rank = mov.next().unwrap().to_digit(10).unwrap() as usize - 1;
-		    // if there is a pawn 1 square away, move that one, else
-		    // move one two squares away
-		    match color {
-			Color::White => {
-			    if let Some(p) = self[(file, rank-1)] && p.typ == PieceType::Pawn {
-				let from = (file, rank -1);
-				let to = (file, rank);
-				self[to] = std::mem::take(&mut self[from]);
-				if DEBUG {
-				    println!("pawn {file}{} to {file}{}", rank-1, rank);
-				}
-				return (from, to);
-			    } else if let Some(p) = self[(file, rank-2)] && p.typ == PieceType::Pawn {
-				let from = (file, rank - 2);
-				let to = (file, rank);
-				self[to] = std::mem::take(&mut self[from]);
-				if DEBUG {
-				    println!("pawn {file}{} to {file}{}", rank-2, rank);
-				}
-				return (from, to);
-			    }
-			}
-			Color::Black => {
-			    if let Some(p) = self[(file, rank+1)] && p.typ == PieceType::Pawn && p.color == color {
-				let from = (file, rank +1);
-				let to = (file, rank);
-				self[to] = std::mem::take(&mut self[from]);
-				if DEBUG {
-				    println!("pawn {file}{} to {file}{}", rank+1, rank);
-				}
-				return (from, to);
-			    } else if let Some(p) = self[(file, rank+2)] && p.typ == PieceType::Pawn && p.color == color {
-				let from = (file, rank + 2);
-				let to = (file, rank);
-				self[to] = std::mem::take(&mut self[from]);
-				if DEBUG {
-				    println!("pawn {file}{} to {file}{}", rank+2, rank);
-				}
-				return (from, to);
-			    }
-			}
-		    }
-		}
+            if let Some(value) = self.mov_pawn(mov, color) {
+                return value;
+            }
         }
         unreachable!();
+    }
+
+    fn mov_pawn(
+        &mut self,
+        mov: &str,
+        color: Color,
+    ) -> Option<((char, usize), (char, usize))> {
+        let mut mov = mov.chars().peekable();
+        let file = mov.next().unwrap();
+        // pawn move
+        if let Some(c) = mov.peek() && *c == 'x' {
+	    // pawn capture
+	    mov.next();
+	    let new_file = mov.next().unwrap();
+	    let rank = mov.next().unwrap().to_digit(10).unwrap() as usize - 1;
+	    match color {
+		Color::White => {
+		    let from = (file, rank - 1);
+		    let to = (new_file, rank);
+		    self[to] = std::mem::take(&mut self[from]);
+		    if DEBUG {
+			println!("pawn {file}{} takes {new_file}{}", rank - 1, rank);
+		    }
+		    return Some((from, to));
+		}
+		Color::Black => {
+		    let from = (file, rank + 1);
+		    let to = (new_file, rank);
+		    self[to] = std::mem::take(&mut self[from]);
+		    if DEBUG {
+			println!("pawn {file}{} takes {new_file}{}", rank + 1, rank);
+		    }
+		    return Some((from, to));
+		}
+	    }
+	} else {
+	    let rank = mov.next().unwrap().to_digit(10).unwrap() as usize - 1;
+	    // if there is a pawn 1 square away, move that one, else
+	    // move one two squares away
+	    match color {
+		Color::White => {
+		    if let Some(p) = self[(file, rank-1)]
+			&& p.typ == PieceType::Pawn {
+			    let from = (file, rank -1);
+			    let to = (file, rank);
+			    self[to] = std::mem::take(&mut self[from]);
+			    if DEBUG {
+				println!("pawn {file}{} to {file}{}", rank-1, rank);
+			    }
+			    return Some((from, to));
+			} else if let Some(p) = self[(file, rank-2)]
+			&& p.typ == PieceType::Pawn {
+			    let from = (file, rank - 2);
+			    let to = (file, rank);
+			    self[to] = std::mem::take(&mut self[from]);
+			    if DEBUG {
+				println!("pawn {file}{} to {file}{}", rank-2, rank);
+			    }
+			    return Some((from, to));
+			}
+		}
+		Color::Black => {
+		    if let Some(p) = self[(file, rank+1)]
+			&& p.typ == PieceType::Pawn && p.color == color {
+			    let from = (file, rank +1);
+			    let to = (file, rank);
+			    self[to] = std::mem::take(&mut self[from]);
+			    if DEBUG {
+				println!("pawn {file}{} to {file}{}", rank+1, rank);
+			    }
+			    return Some((from, to));
+			} else if let Some(p) = self[(file, rank+2)]
+			&& p.typ == PieceType::Pawn && p.color == color {
+			    let from = (file, rank + 2);
+			    let to = (file, rank);
+			    self[to] = std::mem::take(&mut self[from]);
+			    if DEBUG {
+				println!("pawn {file}{} to {file}{}", rank+2, rank);
+			    }
+			    return Some((from, to));
+			}
+		}
+	    }
+	}
+        None
     }
 }
 
