@@ -1,68 +1,126 @@
 #![feature(iter_array_chunks)]
+use board::Board;
 use pgn::Pgn;
 
-mod pgn {
-    use std::{error::Error, fmt::Display, fs::read_to_string, path::Path};
+mod pgn;
 
-    #[derive(Debug)]
-    struct Move {
-        turn: usize,
-        white: String,
-        black: String,
+mod board {
+    use std::fmt::Display;
+
+    #[derive(Clone, Copy)]
+    enum PieceType {
+        King,
+        Queen,
+        Rook,
+        Bishop,
+        Knight,
+        Pawn,
     }
 
-    impl Move {
-        fn new(turn: usize, white: String, black: String) -> Self {
-            Self { turn, white, black }
+    #[derive(Clone, Copy)]
+    enum Color {
+        White,
+        Black,
+    }
+
+    #[derive(Clone, Copy)]
+    struct Piece {
+        typ: PieceType,
+        color: Color,
+    }
+
+    pub struct Board {
+        squares: [[Option<Piece>; 8]; 8],
+    }
+
+    macro_rules! black {
+	($($piece:expr$(,)*)*) => {
+	    [
+		$(Some(Piece { typ: $piece, color: Color::Black }),)*
+	    ]
+	}
+    }
+
+    macro_rules! white {
+	($($piece:expr$(,)*)*) => {
+	    [
+		$(Some(Piece { typ: $piece, color: Color::White }),)*
+	    ]
+	}
+    }
+
+    impl Board {
+        pub fn new() -> Self {
+            use PieceType::*;
+            Self {
+                squares: [
+                    //
+                    black!(
+                        Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook
+                    ),
+                    black!(Pawn, Pawn, Pawn, Pawn, Pawn, Pawn, Pawn, Pawn,),
+                    [None; 8],
+                    [None; 8],
+                    [None; 8],
+                    [None; 8],
+                    white!(Pawn, Pawn, Pawn, Pawn, Pawn, Pawn, Pawn, Pawn,),
+                    white!(
+                        Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook
+                    ),
+                ],
+            }
         }
     }
 
-    #[derive(Debug)]
-    pub struct Pgn {
-        moves: Vec<Move>,
-    }
-
-    #[derive(Debug)]
-    pub struct ParseError;
-
-    impl Display for ParseError {
+    impl Display for Board {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            write!(f, "{self:?}")
-        }
-    }
-
-    impl Error for ParseError {}
-
-    impl Pgn {
-        /// load a PGN from `path`
-        pub fn load<P>(path: P) -> Result<Self, Box<dyn Error>>
-        where
-            P: AsRef<Path>,
-        {
-            let s = read_to_string(path)?;
-            let Some(start) = s.lines().position(str::is_empty) else {
-		return Err(Box::new(ParseError));
-	    };
-            let game: Vec<_> = s.lines().skip(start + 1).collect();
-            let game = game.join(" ");
-            Ok(Self {
-                moves: game
-                    .split_ascii_whitespace()
-                    .array_chunks::<3>()
-                    .map(|[mov, white, black]| {
-                        Move::new(
-                            mov.trim_end_matches('.').parse().unwrap(),
-                            white.to_owned(),
-                            black.to_owned(),
-                        )
-                    })
-                    .collect(),
-            })
+            let mut empty = 0;
+            for (i, row) in self.squares.iter().enumerate() {
+                for piece in row {
+                    if let Some(p) = piece {
+                        if empty > 0 {
+                            write!(f, "{empty}")?;
+                        }
+                        empty = 0;
+                        write!(
+                            f,
+                            "{}",
+                            match (p.color, p.typ) {
+                                (Color::White, PieceType::King) => "K",
+                                (Color::White, PieceType::Queen) => "Q",
+                                (Color::White, PieceType::Rook) => "R",
+                                (Color::White, PieceType::Bishop) => "B",
+                                (Color::White, PieceType::Knight) => "N",
+                                (Color::White, PieceType::Pawn) => "P",
+                                (Color::Black, PieceType::King) => "k",
+                                (Color::Black, PieceType::Queen) => "q",
+                                (Color::Black, PieceType::Rook) => "r",
+                                (Color::Black, PieceType::Bishop) => "b",
+                                (Color::Black, PieceType::Knight) => "n",
+                                (Color::Black, PieceType::Pawn) => "p",
+                            }
+                        )?;
+                    } else {
+                        empty += 1;
+                    }
+                }
+                if empty > 0 {
+                    write!(f, "{empty}")?;
+                }
+                empty = 0;
+                write!(f, "{}", if i < 7 { "/" } else { " " })?;
+            }
+            // for now just say it's white's move, all castling possible, no en
+            // passant targets, no halfmoves since capture or pawn advance, and
+            // move 1
+            write!(f, "w KQkq - 0 1")
         }
     }
 }
 
 fn main() {
     let pgn = Pgn::load("test.pgn").unwrap();
-    dbg!(pgn);
+    std::fs::write("test.tex", pgn.to_latex()).unwrap();
+    let board = Board::new();
+    println!("{board}");
 }
