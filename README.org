@@ -1,0 +1,74 @@
+* chanki
+  A tool for generating chess +flashcards+ diagrams from PGN files
+
+  As suggested by the "anki" portion of the name, the eventual goal is to
+  generate flashcards for learning openings by spaced repetition. Right now it
+  just generates the diagrams that will go into the cards.
+
+* Dependencies
+  - pdflatex with xskak and standalone packages (installed by default with
+    ~texlive-most~ on Arch)
+  - ImageMagick
+  - xclip (only for chanki script)
+
+* Installation
+  #+begin_src shell
+    make install
+  #+end_src
+
+  The default ~install~ recipe will build the binary and symlink it to
+  ~/usr/bin/chanki-bin~, and then symlink ~scripts/chanki~ to ~/usr/bin/chanki~.
+
+* Usage
+  Run the program with the ~-m/--move-number~ flag to supply the halfmove for the
+  diagram. For example, using ~test.pgn~ in the repo with ~-m 4~ produces the
+  diagram below.
+
+  #+attr_html: :width 400px
+  [[file:out.png]]
+** Read from a PGN file
+   If you have an existing PGN file, you can pass it as an argument, or via STDIN:
+
+   #+begin_src shell
+     chanki-bin -m 4 test.pgn
+   #+end_src
+
+   #+begin_src shell
+     chanki-bin -m 4 < test.pgn
+   #+end_src
+
+** Read from clipboard
+   This latter option allows you to read the PGN from your selection or
+   clipboard if you have xclip installed:
+
+   #+begin_src shell
+     chanki-bin -m 4 <(xclip -o) # selection
+   #+end_src
+
+   #+begin_src shell
+     chanki-bin -m 4 <(xclip -selection clipboard -o) # clipboard
+   #+end_src
+
+** Set custom output file
+   Use the ~-o/--output~ flag to set the output path:
+
+   #+begin_src shell
+     chanki-bin -m 4 test.pgn -o move4.png
+   #+end_src
+
+** Using chanki script
+   The ~chanki~ script uses its first argument as the ~--move-number~ argument and
+   takes the ~--output~ argument as an optional second argument. It reads the PGN
+   from the current X selection using xclip. Thus, the first example of reading
+   from the clipboard above becomes
+
+   #+begin_src shell
+     chanki 4
+   #+end_src
+
+   and you can set a different output file, in this case ~/tmp/try.png~, with a
+   second argument:
+
+   #+begin_src shell
+     chanki 4 /tmp/try.png
+   #+end_src
