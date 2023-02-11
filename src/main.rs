@@ -7,6 +7,9 @@ use crate::{board::Color, pgn::Move};
 mod board;
 mod pgn;
 
+#[cfg(test)]
+mod tests;
+
 const DEBUG: bool = false;
 
 fn main() {
