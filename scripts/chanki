@@ -1,3 +1,5 @@
 #!/bin/bash
 
-chanki -n $1 <(xclip -o)
+output=${2:-"out.png"}
+
+chanki-bin --move-number $1 <(xclip -o) --output $output
