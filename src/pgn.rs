@@ -1,10 +1,10 @@
 use std::{error::Error, fmt::Display, fs::read_to_string, path::Path};
 
 #[derive(Debug)]
-struct Move {
-    turn: usize,
-    white: String,
-    black: String,
+pub struct Move {
+    pub turn: usize,
+    pub white: String,
+    pub black: String,
 }
 
 impl Move {
@@ -15,7 +15,7 @@ impl Move {
 
 #[derive(Debug)]
 pub struct Pgn {
-    moves: Vec<Move>,
+    pub moves: Vec<Move>,
 }
 
 #[derive(Debug)]
