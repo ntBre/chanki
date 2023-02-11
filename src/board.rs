@@ -3,7 +3,10 @@ use std::{
     ops::{Index, IndexMut},
 };
 
-use crate::DEBUG;
+use crate::{
+    pgn::{Move, Pgn},
+    DEBUG,
+};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 enum PieceType {
@@ -129,6 +132,26 @@ impl Board {
                 white!(Rook, Knight, Bishop, Queen, King, Bishop, Knight, Rook),
             ],
         }
+    }
+
+    /// play through the moves in `pgn` on `self` and return the vector of all
+    /// the (from, to) move pairs
+    pub fn play(&mut self, pgn: &Pgn) -> Vec<(Coord, Coord)> {
+        pgn.moves
+            .iter()
+            .flat_map(|Move { turn, white, black }| {
+                if DEBUG {
+                    print!("{turn:>3}. ");
+                }
+                let w = self.mov(white, Color::White);
+                if DEBUG {
+                    print!(" ... ");
+                }
+                let b = self.mov(black, Color::Black);
+
+                [w, b]
+            })
+            .collect()
     }
 
     /// make `mov` for `color` on `self` and return the coordinates (from,
