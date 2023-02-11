@@ -128,6 +128,8 @@ mod board {
 	}
     }
 
+    type Coord = (char, usize);
+
     impl Board {
         pub fn new() -> Self {
             use PieceType::*;
@@ -150,7 +152,13 @@ mod board {
             }
         }
 
-        pub(crate) fn mov(&mut self, mov: String, color: Color) {
+        /// make `mov` for `color` on `self` and return the coordinates (from,
+        /// to)
+        pub(crate) fn mov(
+            &mut self,
+            mov: String,
+            color: Color,
+        ) -> (Coord, Coord) {
             if mov.starts_with(['R', 'N', 'B', 'Q', 'K']) {
                 // piece move
                 let mut mov = mov.chars().peekable();
@@ -190,15 +198,16 @@ mod board {
                                 && p.color == color
                                 && p.can_move((f, r), (file, rank))
                             {
-                                self[(file, rank)] =
-                                    std::mem::take(&mut self[(f, r)]);
+                                let to = (file, rank);
+                                let from = (f, r);
+                                self[to] = std::mem::take(&mut self[from]);
                                 if DEBUG {
                                     println!(
                                         "moving {color} {typ} \
 					      from {f}{r} to {file}{rank}"
                                     );
                                 }
-                                return;
+                                return (from, to);
                             }
                         }
                     }
@@ -210,14 +219,18 @@ mod board {
                 }
                 match color {
                     Color::White => {
-                        self[('g', 0)] = std::mem::take(&mut self[('e', 0)]);
+                        let from = ('e', 0);
+                        let to = ('g', 0);
+                        self[to] = std::mem::take(&mut self[from]);
                         self[('f', 0)] = std::mem::take(&mut self[('h', 0)]);
-                        return;
+                        return (from, to);
                     }
                     Color::Black => {
-                        self[('g', 7)] = std::mem::take(&mut self[('e', 7)]);
+                        let from = ('e', 7);
+                        let to = ('g', 7);
+                        self[to] = std::mem::take(&mut self[from]);
                         self[('f', 7)] = std::mem::take(&mut self[('h', 7)]);
-                        return;
+                        return (from, to);
                     }
                 }
             } else if mov == "O-O-O" {
@@ -227,14 +240,18 @@ mod board {
                 }
                 match color {
                     Color::White => {
-                        self[('c', 0)] = std::mem::take(&mut self[('e', 0)]);
+                        let from = ('e', 0);
+                        let to = ('c', 0);
+                        self[to] = std::mem::take(&mut self[from]);
                         self[('d', 0)] = std::mem::take(&mut self[('a', 0)]);
-                        return;
+                        return (from, to);
                     }
                     Color::Black => {
-                        self[('c', 7)] = std::mem::take(&mut self[('e', 7)]);
+                        let from = ('e', 7);
+                        let to = ('c', 7);
+                        self[to] = std::mem::take(&mut self[from]);
                         self[('d', 7)] = std::mem::take(&mut self[('a', 7)]);
-                        return;
+                        return (from, to);
                     }
                 }
             } else {
@@ -248,18 +265,22 @@ mod board {
 		    let rank = mov.next().unwrap().to_digit(10).unwrap() as usize - 1;
 		    match color {
 			Color::White => {
-			    self[(new_file, rank)] = std::mem::take(&mut self[(file, rank - 1)]);
+			    let from = (file, rank - 1);
+			    let to = (new_file, rank);
+			    self[to] = std::mem::take(&mut self[from]);
 			    if DEBUG {
 				println!("pawn {file}{} takes {new_file}{}", rank - 1, rank);
 			    }
-			    return
+			    return (from, to);
 			}
 			Color::Black => {
-			    self[(new_file, rank)] = std::mem::take(&mut self[(file, rank + 1)]);
+			    let from = (file, rank + 1);
+			    let to = (new_file, rank);
+			    self[to] = std::mem::take(&mut self[from]);
 			    if DEBUG {
 				println!("pawn {file}{} takes {new_file}{}", rank + 1, rank);
 			    }
-				return;
+				return (from, to);;
 			}
 		    }
 		} else {
@@ -269,32 +290,40 @@ mod board {
 		    match color {
 			Color::White => {
 			    if let Some(p) = self[(file, rank-1)] && p.typ == PieceType::Pawn {
-				self[(file, rank)] = std::mem::take(&mut self[(file, rank -1)]);
+				let from = (file, rank -1);
+				let to = (file, rank);
+				self[to] = std::mem::take(&mut self[from]);
 				if DEBUG {
 				    println!("pawn {file}{} to {file}{}", rank-1, rank);
 				}
-				return;
+				return (from, to);;
 			    } else if let Some(p) = self[(file, rank-2)] && p.typ == PieceType::Pawn {
-				self[(file, rank)] = std::mem::take(&mut self[(file, rank - 2)]);
+				let from = (file, rank - 2);
+				let to = (file, rank);
+				self[to] = std::mem::take(&mut self[from]);
 				if DEBUG {
 				    println!("pawn {file}{} to {file}{}", rank-2, rank);
 				}
-				return;
+				return (from, to);;
 			    }
 			}
 			Color::Black => {
 			    if let Some(p) = self[(file, rank+1)] && p.typ == PieceType::Pawn && p.color == color {
-				self[(file, rank)] = std::mem::take(&mut self[(file, rank +1)]);
+				let from = (file, rank +1);
+				let to = (file, rank);
+				self[to] = std::mem::take(&mut self[from]);
 				if DEBUG {
 				    println!("pawn {file}{} to {file}{}", rank+1, rank);
 				}
-				return;
+				return (from, to);;
 			    } else if let Some(p) = self[(file, rank+2)] && p.typ == PieceType::Pawn && p.color == color {
-				self[(file, rank)] = std::mem::take(&mut self[(file, rank + 2)]);
+				let from = (file, rank + 2);
+				let to = (file, rank);
+				self[to] = std::mem::take(&mut self[from]);
 				if DEBUG {
 				    println!("pawn {file}{} to {file}{}", rank+2, rank);
 				}
-				return;
+				return (from, to);;
 			    }
 			}
 		    }
