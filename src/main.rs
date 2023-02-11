@@ -32,16 +32,27 @@ mod cli {
         /// for example
         #[arg(short, long)]
         pub(crate) move_number: usize,
+
+        /// Name for the output diagram PNG file
+        #[arg(short, long, default_value_t = String::from("out.png"))]
+        pub(crate) output: String,
     }
 }
 
 use clap::Parser;
 
-fn run_latex() {
+fn run_latex(dir: &str) {
     Command::new("pdflatex")
-        .arg("test.tex")
+        .args(["-output-directory", dir, "test.tex"])
         .output()
         .expect("failed to compile test.tex");
+}
+
+fn run_convert(pdf: &str, png: &str) {
+    Command::new("convert")
+        .args(["-density", "300", pdf, "-quality", "90", png])
+        .output()
+        .expect("failed to convert test.tex to out.png");
 }
 
 fn main() {
@@ -55,7 +66,15 @@ fn main() {
     };
     let mut board = Board::new();
     let moves = board.play(&pgn, args.move_number);
-    std::fs::write("test.tex", board.to_latex(*moves.iter().last().unwrap()))
-        .unwrap();
-    run_latex();
+
+    let dir = std::env::temp_dir().join("chanki");
+    // create_dir_all is okay with it already existing
+    std::fs::create_dir_all(&dir).unwrap();
+    std::fs::write(
+        dir.join("test.tex"),
+        board.to_latex(*moves.iter().last().unwrap()),
+    )
+    .unwrap();
+    run_latex(dir.to_str().unwrap());
+    run_convert(dir.join("test.pdf").to_str().unwrap(), &args.output);
 }
