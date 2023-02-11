@@ -1,5 +1,7 @@
 use std::{error::Error, fmt::Display, fs::read_to_string, path::Path};
 
+use crate::board::Coord;
+
 #[derive(Debug)]
 pub struct Move {
     pub turn: usize,
@@ -57,9 +59,10 @@ impl Pgn {
         })
     }
 
-    pub fn to_latex(&self) -> String {
-        // TODO take markmoves from pairs of to/from, but first I have to
-        // play over the game with a board representation
+    pub fn to_latex(&self, (from, to): (Coord, Coord)) -> String {
+        let (ff, fr) = from;
+        let (tf, tr) = to;
+        let (fr, tr) = (fr + 1, tr + 1);
         format!(
             r#"
 \documentclass{{standalone}}
@@ -67,7 +70,7 @@ impl Pgn {
 \begin{{document}}
 \newchessgame
 \hidemoves{{{self}}}
-\chessboard[showmover=false, pgfstyle=straightmove, markmoves={{a1-c3}}]
+\chessboard[showmover=false, pgfstyle=straightmove, markmoves={{{ff}{fr}-{tf}{tr}}}]
 \end{{document}}
 "#
         )

@@ -6,7 +6,7 @@ use crate::{board::Color, pgn::Move};
 
 mod pgn;
 
-const DEBUG: bool = true;
+const DEBUG: bool = false;
 
 mod board {
     use std::{
@@ -122,7 +122,7 @@ mod board {
 	}
     }
 
-    type Coord = (char, usize);
+    pub type Coord = (char, usize);
 
     impl Board {
         pub fn new() -> Self {
@@ -150,7 +150,7 @@ mod board {
         /// to)
         pub(crate) fn mov(
             &mut self,
-            mov: String,
+            mov: &str,
             color: Color,
         ) -> (Coord, Coord) {
             if mov.starts_with(['R', 'N', 'B', 'Q', 'K']) {
@@ -395,16 +395,18 @@ mod board {
 
 fn main() {
     let pgn = Pgn::load("test.pgn").unwrap();
-    std::fs::write("test.tex", pgn.to_latex()).unwrap();
     let mut board = Board::new();
-    for Move { turn, white, black } in pgn.moves {
+    let mut moves = Vec::new();
+    for Move { turn, white, black } in &pgn.moves {
         if DEBUG {
             print!("{turn:>3}. ");
         }
-        board.mov(white, Color::White);
+        moves.push(board.mov(white, Color::White));
         if DEBUG {
             print!(" ... ");
         }
-        board.mov(black, Color::Black);
+        moves.push(board.mov(black, Color::Black));
     }
+    std::fs::write("test.tex", pgn.to_latex(*moves.iter().last().unwrap()))
+        .unwrap();
 }
