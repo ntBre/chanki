@@ -95,15 +95,9 @@ mod board {
                     (0, y) if y > 0 => true,
                     _ => false,
                 },
-                PieceType::Bishop => match diff {
-                    (x, y) if x == y => true,
-                    _ => false,
-                },
+                PieceType::Bishop => matches!(diff, (x, y) if x == y),
                 PieceType::Knight => [(1, 2), (2, 1)].contains(&diff),
-                PieceType::Pawn => match diff {
-                    (1, 0) | (2, 0) | (1, 1) => true,
-                    _ => false,
-                },
+                PieceType::Pawn => matches!(diff, (1, 0) | (2, 0) | (1, 1)),
             }
         }
     }
@@ -178,19 +172,17 @@ mod board {
                     mov.next().unwrap().to_digit(10).unwrap() as usize - 1;
                 for r in 0..8 {
                     if let Some(d) = disc {
-                        if d.is_numeric() {
-                            if d.to_digit(10).unwrap() as usize - 1 != r {
-                                continue;
-                            }
+                        if d.is_numeric()
+                            && d.to_digit(10).unwrap() as usize - 1 != r
+                        {
+                            continue;
                         }
                     }
                     for f in 'a'..='h' {
                         let square = self[(f, r)];
                         if let Some(d) = disc {
-                            if d.is_alphabetic() {
-                                if d != f {
-                                    continue;
-                                }
+                            if d.is_alphabetic() && d != f {
+                                continue;
                             }
                         }
                         if let Some(p) = square {
@@ -204,7 +196,7 @@ mod board {
                                 if DEBUG {
                                     println!(
                                         "moving {color} {typ} \
-					      from {f}{r} to {file}{rank}"
+					 from {f}{r} to {file}{rank}"
                                     );
                                 }
                                 return (from, to);
@@ -280,7 +272,7 @@ mod board {
 			    if DEBUG {
 				println!("pawn {file}{} takes {new_file}{}", rank + 1, rank);
 			    }
-				return (from, to);;
+			    return (from, to);
 			}
 		    }
 		} else {
@@ -296,7 +288,7 @@ mod board {
 				if DEBUG {
 				    println!("pawn {file}{} to {file}{}", rank-1, rank);
 				}
-				return (from, to);;
+				return (from, to);
 			    } else if let Some(p) = self[(file, rank-2)] && p.typ == PieceType::Pawn {
 				let from = (file, rank - 2);
 				let to = (file, rank);
@@ -304,7 +296,7 @@ mod board {
 				if DEBUG {
 				    println!("pawn {file}{} to {file}{}", rank-2, rank);
 				}
-				return (from, to);;
+				return (from, to);
 			    }
 			}
 			Color::Black => {
@@ -315,7 +307,7 @@ mod board {
 				if DEBUG {
 				    println!("pawn {file}{} to {file}{}", rank+1, rank);
 				}
-				return (from, to);;
+				return (from, to);
 			    } else if let Some(p) = self[(file, rank+2)] && p.typ == PieceType::Pawn && p.color == color {
 				let from = (file, rank + 2);
 				let to = (file, rank);
@@ -323,7 +315,7 @@ mod board {
 				if DEBUG {
 				    println!("pawn {file}{} to {file}{}", rank+2, rank);
 				}
-				return (from, to);;
+				return (from, to);
 			    }
 			}
 		    }

@@ -58,19 +58,18 @@ impl Pgn {
     }
 
     pub fn to_latex(&self) -> String {
-	    // TODO take markmoves from pairs of to/from, but first I have to
-	    // play over the game with a board representation
+        // TODO take markmoves from pairs of to/from, but first I have to
+        // play over the game with a board representation
         format!(
             r#"
 \documentclass{{standalone}}
 \usepackage{{xskak}}
 \begin{{document}}
 \newchessgame
-\hidemoves{{{}}}
+\hidemoves{{{self}}}
 \chessboard[showmover=false, pgfstyle=straightmove, markmoves={{a1-c3}}]
 \end{{document}}
-"#,
-            self
+"#
         )
     }
 }
