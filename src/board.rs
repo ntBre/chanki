@@ -226,10 +226,9 @@ impl Board {
                     return (from, to);
                 }
             }
-        } else {
-            if let Some(value) = self.mov_pawn(mov, color) {
-                return value;
-            }
+        }
+        if let Some(value) = self.mov_pawn(mov, color) {
+            return value;
         }
         unreachable!();
     }
