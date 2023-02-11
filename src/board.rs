@@ -134,24 +134,50 @@ impl Board {
         }
     }
 
-    /// play through the moves in `pgn` on `self` and return the vector of all
-    /// the (from, to) move pairs
-    pub fn play(&mut self, pgn: &Pgn) -> Vec<(Coord, Coord)> {
-        pgn.moves
-            .iter()
-            .flat_map(|Move { turn, white, black }| {
-                if DEBUG {
-                    print!("{turn:>3}. ");
-                }
-                let w = self.mov(white, Color::White);
-                if DEBUG {
-                    print!(" ... ");
-                }
-                let b = self.mov(black, Color::Black);
+    /// play through the moves in `pgn` on `self` up to move_number and return
+    /// the vector of all the (from, to) move pairs
+    pub fn play(
+        &mut self,
+        pgn: &Pgn,
+        move_number: usize,
+    ) -> Vec<(Coord, Coord)> {
+        let mut moves = Vec::new();
+        let mut i = 0;
+        for Move { turn, white, black } in &pgn.moves {
+            if DEBUG {
+                print!("{turn:>3}. ");
+            }
+            moves.push(self.mov(white, Color::White));
+            i += 1;
+            if i == move_number {
+                return moves;
+            }
+            if DEBUG {
+                print!(" ... ");
+            }
+            moves.push(self.mov(black, Color::Black));
+            i += 1;
+            if i == move_number {
+                return moves;
+            }
+        }
+        moves
+    }
 
-                [w, b]
-            })
-            .collect()
+    pub fn to_latex(&self, (from, to): (Coord, Coord)) -> String {
+        let (ff, fr) = from;
+        let (tf, tr) = to;
+        let (fr, tr) = (fr + 1, tr + 1);
+        format!(
+            r#"
+\documentclass{{standalone}}
+\usepackage{{xskak}}
+\begin{{document}}
+\newchessgame
+\chessboard[setfen={self}, showmover=false, pgfstyle=straightmove, markmoves={{{ff}{fr}-{tf}{tr}}}]
+\end{{document}}
+"#
+        )
     }
 
     /// make `mov` for `color` on `self` and return the coordinates (from,

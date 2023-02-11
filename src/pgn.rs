@@ -1,6 +1,6 @@
-use std::{error::Error, fmt::Display, fs::read_to_string, path::Path};
-
-use crate::board::Coord;
+use std::{
+    error::Error, fmt::Display, fs::read_to_string, path::Path, str::FromStr,
+};
 
 #[derive(Debug)]
 pub struct Move {
@@ -38,10 +38,18 @@ impl Pgn {
         P: AsRef<Path>,
     {
         let s = read_to_string(path)?;
+        Ok(Self::from_str(&s)?)
+    }
+}
+
+impl FromStr for Pgn {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         // locate the newline between tags and game itself
         let Some(start) = s.lines().position(str::is_empty) else {
-		return Err(Box::new(ParseError));
-	    };
+		    return Err(ParseError);
+	        };
         let game: Vec<_> = s.lines().skip(start + 1).collect();
         let game = game.join(" ");
         Ok(Self {
@@ -57,23 +65,6 @@ impl Pgn {
                 })
                 .collect(),
         })
-    }
-
-    pub fn to_latex(&self, (from, to): (Coord, Coord)) -> String {
-        let (ff, fr) = from;
-        let (tf, tr) = to;
-        let (fr, tr) = (fr + 1, tr + 1);
-        format!(
-            r#"
-\documentclass{{standalone}}
-\usepackage{{xskak}}
-\begin{{document}}
-\newchessgame
-\hidemoves{{{self}}}
-\chessboard[showmover=false, pgfstyle=straightmove, markmoves={{{ff}{fr}-{tf}{tr}}}]
-\end{{document}}
-"#
-        )
     }
 }
 
