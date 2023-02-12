@@ -174,7 +174,8 @@ impl Board {
 \usepackage{{xskak}}
 \begin{{document}}
 \newchessgame
-\chessboard[setfen={self}, showmover=false, pgfstyle=straightmove, markmoves={{{ff}{fr}-{tf}{tr}}}]
+\chessboard[setfen={self}, showmover=false,
+pgfstyle=straightmove, markmoves={{{ff}{fr}-{tf}{tr}}}]
 \end{{document}}
 "#
         )
@@ -301,7 +302,8 @@ impl Board {
 		    let to = (new_file, rank);
 		    self[to] = std::mem::take(&mut self[from]);
 		    if DEBUG {
-			println!("pawn {file}{} takes {new_file}{}", rank - 1, rank);
+			println!("pawn {file}{} takes {new_file}{}",
+				 rank - 1, rank);
 		    }
 		    return Some((from, to));
 		}
@@ -310,7 +312,8 @@ impl Board {
 		    let to = (new_file, rank);
 		    self[to] = std::mem::take(&mut self[from]);
 		    if DEBUG {
-			println!("pawn {file}{} takes {new_file}{}", rank + 1, rank);
+			println!("pawn {file}{} takes {new_file}{}",
+				 rank + 1, rank);
 		    }
 		    return Some((from, to));
 		}
@@ -327,16 +330,18 @@ impl Board {
 			    let to = (file, rank);
 			    self[to] = std::mem::take(&mut self[from]);
 			    if DEBUG {
-				println!("pawn {file}{} to {file}{}", rank-1, rank);
+				println!("pawn {file}{} to {file}{}",
+					 rank-1, rank);
 			    }
 			    return Some((from, to));
-			} else if let Some(p) = self[(file, rank-2)]
+			} else if let Some(p) = self[(file, rank - 2)]
 			&& p.typ == PieceType::Pawn {
 			    let from = (file, rank - 2);
 			    let to = (file, rank);
 			    self[to] = std::mem::take(&mut self[from]);
 			    if DEBUG {
-				println!("pawn {file}{} to {file}{}", rank-2, rank);
+				println!("pawn {file}{} to {file}{}",
+					 rank - 2, rank);
 			    }
 			    return Some((from, to));
 			}
@@ -344,20 +349,22 @@ impl Board {
 		Color::Black => {
 		    if let Some(p) = self[(file, rank+1)]
 			&& p.typ == PieceType::Pawn && p.color == color {
-			    let from = (file, rank +1);
+			    let from = (file, rank + 1);
 			    let to = (file, rank);
 			    self[to] = std::mem::take(&mut self[from]);
 			    if DEBUG {
-				println!("pawn {file}{} to {file}{}", rank+1, rank);
+				println!("pawn {file}{} to {file}{}",
+					 rank + 1, rank);
 			    }
 			    return Some((from, to));
-			} else if let Some(p) = self[(file, rank+2)]
+			} else if let Some(p) = self[(file, rank + 2)]
 			&& p.typ == PieceType::Pawn && p.color == color {
 			    let from = (file, rank + 2);
 			    let to = (file, rank);
 			    self[to] = std::mem::take(&mut self[from]);
 			    if DEBUG {
-				println!("pawn {file}{} to {file}{}", rank+2, rank);
+				println!("pawn {file}{} to {file}{}",
+					 rank + 2, rank);
 			    }
 			    return Some((from, to));
 			}
