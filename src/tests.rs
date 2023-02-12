@@ -1,4 +1,4 @@
-use super::*;
+use crate::{board::Board, pgn::Pgn};
 
 #[test]
 fn mov() {

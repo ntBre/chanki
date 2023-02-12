@@ -375,6 +375,12 @@ pgfstyle=straightmove, markmoves={{{ff}{fr}-{tf}{tr}}}]
     }
 }
 
+impl Default for Board {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// convert the char file to a usize
 const fn to_idx(c: char) -> usize {
     c as usize - 'a' as usize

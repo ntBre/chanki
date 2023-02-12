@@ -7,8 +7,8 @@ test:
 .PHONY: build install
 
 build:
-	cargo build --release
+	cargo build -p chanki-cli --release
 
 install: build
-	sudo ln -sf $(realpath target/release/chanki) /usr/bin/chanki-bin
-	sudo ln -sf $(realpath scripts/chanki) /usr/bin/chanki
+	sudo ln -sf $(realpath target/release/chanki-cli) /usr/bin/chanki-bin
+	sudo ln -sf $(realpath scripts/chanki-cli) /usr/bin/chanki
