@@ -20,55 +20,65 @@
   ~/usr/bin/chanki-bin~, and then symlink ~scripts/chanki~ to ~/usr/bin/chanki~.
 
 * Usage
-  Run the program with the ~-m/--move-number~ flag to supply the halfmove for the
-  diagram. For example, using ~test.pgn~ in the repo with ~-m 4~ produces the
-  diagram below.
+** GUI
+   Either build the ~chanki-gui~ binary or use ~make gui~ to run inside of the repo.
+   The image shows the ~Edit Card~ view, which combines the view for adding new
+   cards and that for reviewing cards from an existing deck.
 
-  #+attr_html: :width 400px
-  [[file:out.png]]
-** Read from a PGN file
-   If you have an existing PGN file, you can pass it as an argument, or via STDIN:
+   #+attr_html: :width 400px
+   [[file:gui.png]]
 
-   #+begin_src shell
-     chanki-bin -m 4 test.pgn
-   #+end_src
+** CLI
+   Run the program with the ~-m/--move-number~ flag to supply the halfmove for the
+   diagram. For example, using ~test.pgn~ in the repo with ~-m 4~ produces the
+   diagram below.
 
-   #+begin_src shell
-     chanki-bin -m 4 < test.pgn
-   #+end_src
+   #+attr_html: :width 400px
+   [[file:out.png]]
+*** Read from a PGN file
+    If you have an existing PGN file, you can pass it as an argument, or via STDIN:
 
-** Read from clipboard
-   This latter option allows you to read the PGN from your selection or
-   clipboard if you have xclip installed:
+    #+begin_src shell
+      chanki-bin -m 4 test.pgn
+    #+end_src
 
-   #+begin_src shell
-     chanki-bin -m 4 <(xclip -o) # selection
-   #+end_src
+    #+begin_src shell
+      chanki-bin -m 4 < test.pgn
+    #+end_src
 
-   #+begin_src shell
-     chanki-bin -m 4 <(xclip -selection clipboard -o) # clipboard
-   #+end_src
+*** Read from clipboard
+    This latter option allows you to read the PGN from your selection or
+    clipboard if you have xclip installed:
 
-** Set custom output file
-   Use the ~-o/--output~ flag to set the output path:
+    #+begin_src shell
+      chanki-bin -m 4 <(xclip -o) # selection
+    #+end_src
 
-   #+begin_src shell
-     chanki-bin -m 4 test.pgn -o move4.png
-   #+end_src
+    #+begin_src shell
+      chanki-bin -m 4 <(xclip -selection clipboard -o) # clipboard
+    #+end_src
 
-** Using chanki script
-   The ~chanki~ script uses its first argument as the ~--move-number~ argument and
-   takes the ~--output~ argument as an optional second argument. It reads the PGN
-   from the current X selection using xclip. Thus, the first example of reading
-   from the clipboard above becomes
+*** Set custom output file
+    Use the ~-o/--output~ flag to set the output path:
 
-   #+begin_src shell
-     chanki 4
-   #+end_src
+    #+begin_src shell
+      chanki-bin -m 4 test.pgn -o move4.png
+    #+end_src
 
-   and you can set a different output file, in this case ~/tmp/try.png~, with a
-   second argument:
+*** Using chanki script
+    The ~chanki~ script uses its first argument as the ~--move-number~ argument and
+    takes the ~--output~ argument as an optional second argument. It reads the PGN
+    from the current X selection using xclip. Thus, the first example of reading
+    from the clipboard above becomes
 
-   #+begin_src shell
-     chanki 4 /tmp/try.png
-   #+end_src
+    #+begin_src shell
+      chanki 4
+    #+end_src
+
+    and you can set a different output file, in this case ~/tmp/try.png~, with a
+    second argument:
+
+    #+begin_src shell
+      chanki 4 /tmp/try.png
+    #+end_src
+
