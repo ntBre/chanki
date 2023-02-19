@@ -1,4 +1,4 @@
-use chanki::{board::Board, pgn::Pgn, run_convert, run_latex};
+use chanki::{deck::Card, pgn::Pgn};
 use clap::Parser;
 use std::{
     io::{stdin, Read},
@@ -21,6 +21,10 @@ pub(crate) struct Args {
     /// Name for the output diagram PNG file
     #[arg(short, long, default_value_t = String::from("out.png"))]
     pub(crate) output: String,
+
+    /// Answer for the card,
+    #[arg(short, long)]
+    pub(crate) answer: String,
 }
 
 fn main() {
@@ -32,17 +36,6 @@ fn main() {
         stdin().read_to_string(&mut s).unwrap();
         Pgn::from_str(&s).unwrap()
     };
-    let mut board = Board::new();
-    let moves = board.play(&pgn, args.move_number);
 
-    let dir = std::env::temp_dir().join("chanki");
-    // create_dir_all is okay with it already existing
-    std::fs::create_dir_all(&dir).unwrap();
-    std::fs::write(
-        dir.join("test.tex"),
-        board.to_latex(*moves.iter().last().unwrap()),
-    )
-    .unwrap();
-    run_latex(dir.to_str().unwrap());
-    run_convert(dir.join("test.pdf").to_str().unwrap(), &args.output);
+    Card::new(&pgn, args.move_number, args.output, args.answer);
 }

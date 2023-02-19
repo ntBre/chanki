@@ -6,5 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+chanki = { path = "../" }
 eframe = { version = "0.21.2", default-features = false, features = [ "glow" ] }
 egui = "0.21.0"
+image = { version = "0.24.5", features = ["png"] }
