@@ -1,5 +1,5 @@
 clippy:
-	cargo clippy --tests
+	cargo clippy --all
 
 test:
 	cargo test
