@@ -10,3 +10,4 @@ chanki = { path = "../" }
 eframe = { version = "0.21.2", default-features = false, features = [ "glow" ] }
 egui = "0.21.0"
 image = { version = "0.24.5", features = ["png"] }
+rand = "0.8.5"

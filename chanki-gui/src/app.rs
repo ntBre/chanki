@@ -1,12 +1,18 @@
 use std::{error::Error, io::Read, path::Path, str::FromStr};
 
 use chanki::{
-    deck::{Card, Deck},
+    deck::{Card, Deck, Quality},
     pgn::Pgn,
     DECK_PATH,
 };
 use eframe::CreationContext;
 use egui::{Button, TextEdit, TextureHandle, TextureOptions, Ui, Visuals};
+use rand::seq::SliceRandom;
+
+struct CardImage {
+    texture: TextureHandle,
+    index: usize,
+}
 
 pub struct App {
     view: fn(app: &mut App, ui: &mut Ui),
@@ -14,18 +20,25 @@ pub struct App {
     half_move: String,
     answer: String,
     deck: Deck,
-    cur_card: Option<TextureHandle>,
+    cur_card: Option<CardImage>,
+    some_review: bool,
 }
 
 impl Default for App {
     fn default() -> Self {
+        let deck = Deck::load(DECK_PATH).unwrap_or_else(|e| {
+            eprintln!("error loading deck: {e}");
+            Deck::default()
+        });
+        let some_review = deck.cards.iter().any(|c| c.is_due());
         Self {
             view: Self::main_view,
             pgn: String::new(),
             half_move: String::new(),
             answer: String::new(),
-            deck: Deck::load(DECK_PATH).unwrap_or_else(|_| Deck::default()),
+            deck,
             cur_card: None,
+            some_review,
         }
     }
 }
@@ -63,7 +76,11 @@ impl App {
         if ui.add(Button::new("Edit card")).clicked() {
             self.view = Self::edit_view;
         }
-        if ui.add(Button::new("Review")).clicked() {
+
+        if ui
+            .add_enabled(self.some_review, Button::new("Review"))
+            .clicked()
+        {
             self.view = Self::review_prompt;
         }
     }
@@ -81,6 +98,7 @@ impl App {
             self.deck.dump(DECK_PATH).unwrap();
             self.pgn.clear();
             self.half_move.clear();
+            self.some_review = true;
         }
 
         if ui.add(Button::new("Done")).clicked() {
@@ -103,7 +121,8 @@ impl App {
     }
 
     fn edit_view(&mut self, ui: &mut egui::Ui) {
-        self.show_card(ui);
+        let idx = self.cur_card_index();
+        self.show_card(ui, idx);
         self.add_card(ui);
         if ui.add(Button::new("Update")).clicked() {
             self.deck.cards[0] = Card::new(
@@ -115,39 +134,100 @@ impl App {
             self.deck.dump(DECK_PATH).unwrap();
             self.pgn.clear();
             self.half_move.clear();
+            self.some_review = true;
         }
         if ui.add(Button::new("Done")).clicked() {
             self.view = Self::main_view;
+        }
+        if ui
+            .add_enabled(idx < self.deck.cards.len() - 1, Button::new("Next"))
+            .clicked()
+        {
+            self.show_card(ui, idx + 1);
+        }
+        if ui.add_enabled(idx > 0, Button::new("Prev")).clicked() {
+            self.show_card(ui, idx - 1);
         }
     }
 
     fn review_prompt(&mut self, ui: &mut egui::Ui) {
-        self.show_card(ui);
-        if ui.add(Button::new("Check")).clicked() {
-            self.view = Self::review_answer;
+        let mut cards: Vec<usize> = self
+            .deck
+            .cards
+            .iter()
+            .enumerate()
+            .filter_map(|(i, c)| if c.is_due() { Some(i) } else { None })
+            .collect();
+        cards.shuffle(&mut rand::thread_rng());
+        if let Some(i) = cards.first() {
+            self.show_card(ui, *i);
+            if ui.add(Button::new("Check")).clicked() {
+                self.view = Self::review_answer;
+                return;
+            }
+        } else {
+            self.some_review = false;
+            self.view = Self::main_view;
         }
     }
 
-    fn show_card(&mut self, ui: &mut Ui) {
-        if self.cur_card.is_none() {
-            self.cur_card = Some(ui.ctx().load_texture(
-                "the card",
-                load_image(&self.deck.cards[0].pgn).unwrap(),
-                TextureOptions::default(),
-            ));
+    fn show_card(&mut self, ui: &mut Ui, index: usize) {
+        let idx = self.cur_card_index();
+        if self.cur_card.is_none() || index != idx {
+            self.cur_card = Some(CardImage {
+                texture: ui.ctx().load_texture(
+                    "the card",
+                    load_image(&self.deck.cards[index].pgn).unwrap(),
+                    TextureOptions::default(),
+                ),
+                index,
+            });
         }
-        ui.image(self.cur_card.as_ref().unwrap(), [320., 320.]);
+        ui.image(&self.cur_card.as_ref().unwrap().texture, [320., 320.]);
     }
 
     fn review_answer(&mut self, ui: &mut egui::Ui) {
+        let idx = self.cur_card_index();
+        self.show_card(ui, idx);
         ui.label(format!("Answer: {}", self.deck.cards[0].answer));
-        ui.add(Button::new("1"));
-        ui.add(Button::new("2"));
-        ui.add(Button::new("3"));
-        ui.add(Button::new("4"));
-        ui.add(Button::new("5"));
-        if ui.add(Button::new("Done")).clicked() {
-            self.view = Self::main_view;
+        let idx = self.cur_card_index();
+        if ui.add(Button::new("0")).clicked() {
+            self.deck.cards[idx].update_card(Quality::Zero);
+            self.deck.dump(DECK_PATH).unwrap();
+            self.view = Self::review_prompt;
+        }
+        if ui.add(Button::new("1")).clicked() {
+            self.deck.cards[idx].update_card(Quality::One);
+            self.deck.dump(DECK_PATH).unwrap();
+            self.view = Self::review_prompt;
+        }
+        if ui.add(Button::new("2")).clicked() {
+            self.deck.cards[idx].update_card(Quality::Two);
+            self.deck.dump(DECK_PATH).unwrap();
+            self.view = Self::review_prompt;
+        }
+        if ui.add(Button::new("3")).clicked() {
+            self.deck.cards[idx].update_card(Quality::Three);
+            self.deck.dump(DECK_PATH).unwrap();
+            self.view = Self::review_prompt;
+        }
+        if ui.add(Button::new("4")).clicked() {
+            self.deck.cards[idx].update_card(Quality::Four);
+            self.deck.dump(DECK_PATH).unwrap();
+            self.view = Self::review_prompt;
+        }
+        if ui.add(Button::new("5")).clicked() {
+            self.deck.cards[idx].update_card(Quality::Five);
+            self.deck.dump(DECK_PATH).unwrap();
+            self.view = Self::review_prompt;
+        }
+    }
+
+    fn cur_card_index(&self) -> usize {
+        if let Some(c) = &self.cur_card {
+            c.index
+        } else {
+            0
         }
     }
 }
