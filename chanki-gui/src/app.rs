@@ -6,7 +6,9 @@ use chanki::{
     DECK_PATH,
 };
 use eframe::CreationContext;
-use egui::{Button, TextEdit, TextureHandle, TextureOptions, Ui, Visuals};
+use egui::{
+    Button, Pos2, Rect, TextEdit, TextureHandle, TextureOptions, Ui, Visuals,
+};
 use rand::seq::SliceRandom;
 
 struct CardImage {
@@ -163,7 +165,6 @@ impl App {
             self.show_card(ui, *i);
             if ui.add(Button::new("Check")).clicked() {
                 self.view = Self::review_answer;
-                return;
             }
         } else {
             self.some_review = false;
@@ -228,6 +229,30 @@ impl App {
             c.index
         } else {
             0
+        }
+    }
+}
+
+/// draw a chess board, but the sizes are hard-coded and it's not centered
+#[allow(unused)]
+fn draw_board(ui: &mut Ui) {
+    for row in 1..=8 {
+        for col in 1..=8 {
+            ui.painter().rect_filled(
+                Rect::from_points(&[
+                    Pos2::new(col as f32 * 50.0, 200.0 + (row as f32) * 50.0),
+                    Pos2::new(
+                        (col + 1) as f32 * 50.0,
+                        200.0 + ((row + 1) as f32) * 50.0,
+                    ),
+                ]),
+                0.0,
+                if col % 2 == row % 2 {
+                    egui::Color32::LIGHT_GRAY
+                } else {
+                    egui::Color32::BROWN
+                },
+            );
         }
     }
 }
